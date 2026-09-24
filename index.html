@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Recognify Consent</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    max-width: 520px;
+    margin: 32px auto;
+    padding: 0 20px;
+    line-height: 1.6;
+    color: #1a1a2e;
+  }
+  h2 { margin-bottom: 4px; }
+  ul { padding-left: 20px; }
+  .never-stored {
+    background: #f0f0ff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 20px 0;
+  }
+  button {
+    font-size: 18px;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  #agreeBtn {
+    background: #4C4CE0;
+    color: #fff;
+  }
+  #saveBtn {
+    background: #f0f0f0;
+    color: #1a1a2e;
+    margin-top: 12px;
+  }
+  #done { display: none; }
+  .code {
+    font-size: 32px;
+    font-weight: bold;
+    letter-spacing: 6px;
+    background: #f0f0ff;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    margin: 16px 0;
+  }
+  .checkmark { font-size: 22px; }
+</style>
+</head>
+<body>
+
+<div id="ask">
+  <h2 id="title"></h2>
+  <p><b id="appUserName"></b> <span id="intro"></span></p>
+  <ul>
+    <li><span id="nameLabel"></span>: <b id="personName"></b></li>
+    <li id="embeddingText"></li>
+    <li id="relationshipLine" style="display:none">
+      <span id="relationshipLabel"></span>: <span id="relationshipValue"></span>
+    </li>
+  </ul>
+  <div class="never-stored"><span id="neverStored"></span></div>
+  <button id="agreeBtn"></button>
+</div>
+
+<div id="done">
+  <p class="checkmark">&#10003; <span id="agreedOn"></span> <span id="dateNow"></span></p>
+  <p id="codeLabel"></p>
+  <div class="code" id="codeValue"></div>
+  <p><span id="showCode"></span> <b id="appUserName2"></b></p>
+  <button id="saveBtn" onclick="window.print()"></button>
+</div>
+
+<script>
+  // Every piece of display text comes from the app (already translated
+  // there, in whatever language the app was in when the QR was made) —
+  // this page has no text of its own, it's a pure template.
+  const p = new URLSearchParams(window.location.search);
+  const get = (key) => p.get(key) || '';
+
+  document.getElementById('title').textContent = get('title');
+  document.getElementById('appUserName').textContent = get('user');
+  document.getElementById('appUserName2').textContent = get('user');
+  document.getElementById('intro').textContent = get('intro');
+  document.getElementById('nameLabel').textContent = get('nameLabel');
+  document.getElementById('personName').textContent = get('name');
+  document.getElementById('embeddingText').textContent = get('embeddingText');
+  document.getElementById('neverStored').textContent = get('neverStored');
+  document.getElementById('agreeBtn').textContent = get('agreeBtn');
+  document.getElementById('agreedOn').textContent = get('agreedOn');
+  document.getElementById('codeLabel').textContent = get('codeLabel');
+  document.getElementById('codeValue').textContent = get('code');
+  document.getElementById('showCode').textContent = get('showCode');
+  document.getElementById('saveBtn').textContent = get('saveBtn');
+  document.getElementById('dateNow').textContent = new Date().toLocaleString();
+
+  const relationship = get('relationship');
+  if (relationship) {
+    document.getElementById('relationshipLabel').textContent = get('relationshipLabel');
+    document.getElementById('relationshipValue').textContent = relationship;
+    document.getElementById('relationshipLine').style.display = 'list-item';
+  }
+
+  document.getElementById('agreeBtn').addEventListener('click', () => {
+    document.getElementById('ask').style.display = 'none';
+    document.getElementById('done').style.display = 'block';
+  });
+</script>
+
+</body>
+</html>
