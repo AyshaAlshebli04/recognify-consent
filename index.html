@@ -58,14 +58,11 @@
 <body>
 
 <!--
-  Deliberately ONE single block, not two toggling sections. Earlier
-  versions kept the terms and the confirmation code in SEPARATE divs
-  and auto-scrolled to the code once agreed — on some mobile browsers,
-  printing/saving to PDF only captured whatever was currently scrolled
-  into view, silently dropping the terms above it. Now the terms are
-  copied directly into the confirmation section itself, so whatever
-  gets saved is guaranteed complete regardless of scroll position or
-  any particular browser's print quirks.
+  Two sections, only ONE visible at a time. Before agreeing: the terms
+  and the Agree button. After agreeing: the first section is hidden and
+  replaced by the confirmation section, which carries its own copy of
+  the terms plus the date and code. So the terms appear once on screen,
+  and whatever gets saved/printed is still complete on its own.
 -->
 
 <div id="ask">
@@ -108,9 +105,8 @@
   const p = new URLSearchParams(window.location.search);
   const get = (key) => p.get(key) || '';
 
-  // Fill BOTH copies (the initial terms, and the repeated copy inside
-  // the confirmation section) from the exact same values — always in
-  // sync, no separate hidden mismatch possible.
+  // Fill BOTH copies from the exact same values, so the confirmation
+  // section always matches what the person read.
   const fields = {
     title: get('title'),
     appUserName: get('user'),
@@ -133,7 +129,6 @@
   document.getElementById('codeValue').textContent = get('code');
   document.getElementById('showCode').textContent = get('showCode');
   document.getElementById('saveBtn').textContent = get('saveBtn');
-  document.getElementById('dateNow').textContent = new Date().toLocaleString();
 
   const relationship = get('relationship');
   if (relationship) {
@@ -145,15 +140,13 @@
     document.getElementById('relationshipLineRepeat').style.display = 'list-item';
   }
 
-  document.getElementById('agreeBtn').addEventListener('click', (e) => {
-    e.target.disabled = true;
-    e.target.style.opacity = '0.5';
+  document.getElementById('agreeBtn').addEventListener('click', () => {
+    // The moment of agreeing, not when the page was opened.
+    document.getElementById('dateNow').textContent = new Date().toLocaleString();
+    // Swap sections: terms are shown once, never twice.
+    document.getElementById('ask').style.display = 'none';
     document.getElementById('done').style.display = 'block';
-    // Deliberately NOT auto-scrolling here — that was very likely why
-    // some browsers' print/save only captured the code and not the
-    // terms above it. The confirmation section is self-contained now
-    // anyway (it has its own copy of the terms), so there's nothing
-    // that needs to be scrolled into view to be complete.
+    window.scrollTo(0, 0);
   });
 </script>
 
