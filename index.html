@@ -2,6 +2,9 @@
 <html>
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Recognify Consent</title>
 <style>
@@ -35,7 +38,7 @@
   #saveBtn {
     background: #f0f0f0;
     color: #1a1a2e;
-    margin-top: 12px;
+    margin-top: 20px;
   }
   #done { display: none; }
   .code {
@@ -49,9 +52,21 @@
     margin: 16px 0;
   }
   .checkmark { font-size: 22px; }
+  hr { border: none; border-top: 1px solid #e0e0e0; margin: 24px 0; }
 </style>
 </head>
 <body>
+
+<!--
+  Deliberately ONE single block, not two toggling sections. Earlier
+  versions kept the terms and the confirmation code in SEPARATE divs
+  and auto-scrolled to the code once agreed — on some mobile browsers,
+  printing/saving to PDF only captured whatever was currently scrolled
+  into view, silently dropping the terms above it. Now the terms are
+  copied directly into the confirmation section itself, so whatever
+  gets saved is guaranteed complete regardless of scroll position or
+  any particular browser's print quirks.
+-->
 
 <div id="ask">
   <h2 id="title"></h2>
@@ -68,6 +83,17 @@
 </div>
 
 <div id="done">
+  <h2 id="titleRepeat"></h2>
+  <p><b id="appUserNameRepeat"></b> <span id="introRepeat"></span></p>
+  <ul>
+    <li><span id="nameLabelRepeat"></span>: <b id="personNameRepeat"></b></li>
+    <li id="embeddingTextRepeat"></li>
+    <li id="relationshipLineRepeat" style="display:none">
+      <span id="relationshipLabelRepeat"></span>: <span id="relationshipValueRepeat"></span>
+    </li>
+  </ul>
+  <div class="never-stored"><span id="neverStoredRepeat"></span></div>
+  <hr>
   <p class="checkmark">&#10003; <span id="agreedOn"></span> <span id="dateNow"></span></p>
   <p id="codeLabel"></p>
   <div class="code" id="codeValue"></div>
@@ -82,14 +108,25 @@
   const p = new URLSearchParams(window.location.search);
   const get = (key) => p.get(key) || '';
 
-  document.getElementById('title').textContent = get('title');
-  document.getElementById('appUserName').textContent = get('user');
+  // Fill BOTH copies (the initial terms, and the repeated copy inside
+  // the confirmation section) from the exact same values — always in
+  // sync, no separate hidden mismatch possible.
+  const fields = {
+    title: get('title'),
+    appUserName: get('user'),
+    intro: get('intro'),
+    nameLabel: get('nameLabel'),
+    personName: get('name'),
+    embeddingText: get('embeddingText'),
+    neverStored: get('neverStored'),
+  };
+  for (const [key, value] of Object.entries(fields)) {
+    document.getElementById(key).textContent = value;
+    const repeatEl = document.getElementById(key + 'Repeat');
+    if (repeatEl) repeatEl.textContent = value;
+  }
+
   document.getElementById('appUserName2').textContent = get('user');
-  document.getElementById('intro').textContent = get('intro');
-  document.getElementById('nameLabel').textContent = get('nameLabel');
-  document.getElementById('personName').textContent = get('name');
-  document.getElementById('embeddingText').textContent = get('embeddingText');
-  document.getElementById('neverStored').textContent = get('neverStored');
   document.getElementById('agreeBtn').textContent = get('agreeBtn');
   document.getElementById('agreedOn').textContent = get('agreedOn');
   document.getElementById('codeLabel').textContent = get('codeLabel');
@@ -103,11 +140,20 @@
     document.getElementById('relationshipLabel').textContent = get('relationshipLabel');
     document.getElementById('relationshipValue').textContent = relationship;
     document.getElementById('relationshipLine').style.display = 'list-item';
+    document.getElementById('relationshipLabelRepeat').textContent = get('relationshipLabel');
+    document.getElementById('relationshipValueRepeat').textContent = relationship;
+    document.getElementById('relationshipLineRepeat').style.display = 'list-item';
   }
 
-  document.getElementById('agreeBtn').addEventListener('click', () => {
-    document.getElementById('ask').style.display = 'none';
+  document.getElementById('agreeBtn').addEventListener('click', (e) => {
+    e.target.disabled = true;
+    e.target.style.opacity = '0.5';
     document.getElementById('done').style.display = 'block';
+    // Deliberately NOT auto-scrolling here — that was very likely why
+    // some browsers' print/save only captured the code and not the
+    // terms above it. The confirmation section is self-contained now
+    // anyway (it has its own copy of the terms), so there's nothing
+    // that needs to be scrolled into view to be complete.
   });
 </script>
 
