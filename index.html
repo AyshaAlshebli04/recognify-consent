@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -9,15 +9,31 @@
 <title>Recognify Consent</title>
 <style>
   body {
-    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-family: -apple-system, "Segoe UI", Roboto, Tahoma, "Noto Naskh Arabic", sans-serif;
     max-width: 520px;
-    margin: 32px auto;
+    margin: 24px auto;
     padding: 0 20px;
     line-height: 1.6;
     color: #1a1a2e;
   }
   h2 { margin-bottom: 4px; }
-  ul { padding-left: 20px; }
+  ul { padding-inline-start: 20px; }
+  .lang {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+  }
+  .lang button {
+    font-size: 16px;
+    padding: 8px 16px;
+    background: #f0f0f0;
+    color: #1a1a2e;
+  }
+  .lang button[aria-pressed="true"] {
+    background: #1a1a2e;
+    color: #fff;
+  }
   .never-stored {
     background: #f0f0ff;
     border-radius: 12px;
@@ -30,16 +46,10 @@
     border: none;
     border-radius: 10px;
     cursor: pointer;
+    font-family: inherit;
   }
-  #agreeBtn {
-    background: #4C4CE0;
-    color: #fff;
-  }
-  #saveBtn {
-    background: #f0f0f0;
-    color: #1a1a2e;
-    margin-top: 20px;
-  }
+  #agreeBtn { background: #4C4CE0; color: #fff; }
+  #saveBtn { background: #f0f0f0; color: #1a1a2e; margin-top: 20px; }
   #done { display: none; }
   .code {
     font-size: 32px;
@@ -50,104 +60,132 @@
     padding: 16px;
     text-align: center;
     margin: 16px 0;
+    direction: ltr;
   }
   .checkmark { font-size: 22px; }
   hr { border: none; border-top: 1px solid #e0e0e0; margin: 24px 0; }
+  @media print { .lang, #agreeBtn, #saveBtn { display: none !important; } }
 </style>
 </head>
 <body>
 
 <!--
-  Two sections, only ONE visible at a time. Before agreeing: the terms
-  and the Agree button. After agreeing: the first section is hidden and
-  replaced by the confirmation section, which carries its own copy of
-  the terms plus the date and code. So the terms appear once on screen,
-  and whatever gets saved/printed is still complete on its own.
+  English / Arabic consent page. The fixed wording for BOTH languages
+  lives here (copied word for word from lib/app/strings.dart, keys
+  consent_page_*); the app only sends the person's details, the code
+  and the starting language. That keeps the QR code short, and the
+  other person can switch language with the buttons at the top.
+  If you change the wording in strings.dart, change it here too.
+
+  Deliberately ONE block for the confirmation: the terms are repeated
+  inside it, so saving / printing always captures everything,
+  whatever the scroll position (some mobile browsers only printed the
+  part on screen).
 -->
 
+<div class="lang" role="group" aria-label="Language / اللغة">
+  <button id="btnEn" type="button" onclick="setLang('en')">English</button>
+  <button id="btnAr" type="button" onclick="setLang('ar')">العربية</button>
+</div>
+
 <div id="ask">
-  <h2 id="title"></h2>
-  <p><b id="appUserName"></b> <span id="intro"></span></p>
+  <h2 data-t="title"></h2>
+  <p><b class="user"></b> <span data-t="intro"></span></p>
   <ul>
-    <li><span id="nameLabel"></span>: <b id="personName"></b></li>
-    <li id="embeddingText"></li>
-    <li id="relationshipLine" style="display:none">
-      <span id="relationshipLabel"></span>: <span id="relationshipValue"></span>
-    </li>
+    <li><span data-t="name_label"></span>: <b class="person"></b></li>
+    <li data-t="embedding_text"></li>
+    <li class="relLine" style="display:none"><span data-t="relationship_label"></span>: <span class="rel"></span></li>
   </ul>
-  <div class="never-stored"><span id="neverStored"></span></div>
-  <button id="agreeBtn"></button>
+  <div class="never-stored"><span data-t="never_stored"></span></div>
+  <button id="agreeBtn" type="button" data-t="agree_button"></button>
 </div>
 
 <div id="done">
-  <h2 id="titleRepeat"></h2>
-  <p><b id="appUserNameRepeat"></b> <span id="introRepeat"></span></p>
+  <h2 data-t="title"></h2>
+  <p><b class="user"></b> <span data-t="intro"></span></p>
   <ul>
-    <li><span id="nameLabelRepeat"></span>: <b id="personNameRepeat"></b></li>
-    <li id="embeddingTextRepeat"></li>
-    <li id="relationshipLineRepeat" style="display:none">
-      <span id="relationshipLabelRepeat"></span>: <span id="relationshipValueRepeat"></span>
-    </li>
+    <li><span data-t="name_label"></span>: <b class="person"></b></li>
+    <li data-t="embedding_text"></li>
+    <li class="relLine" style="display:none"><span data-t="relationship_label"></span>: <span class="rel"></span></li>
   </ul>
-  <div class="never-stored"><span id="neverStoredRepeat"></span></div>
+  <div class="never-stored"><span data-t="never_stored"></span></div>
   <hr>
-  <p class="checkmark">&#10003; <span id="agreedOn"></span> <span id="dateNow"></span></p>
-  <p id="codeLabel"></p>
+  <p class="checkmark">&#10003; <span data-t="agreed_on"></span> <span id="dateNow"></span></p>
+  <p data-t="code_label"></p>
   <div class="code" id="codeValue"></div>
-  <p><span id="showCode"></span> <b id="appUserName2"></b></p>
-  <button id="saveBtn" onclick="window.print()"></button>
+  <p><span data-t="show_code"></span> <b class="user"></b></p>
+  <button id="saveBtn" type="button" onclick="window.print()" data-t="save_button"></button>
 </div>
 
 <script>
-  // Every piece of display text comes from the app (already translated
-  // there, in whatever language the app was in when the QR was made) —
-  // this page has no text of its own, it's a pure template.
+  const TEXT = {
+  "en": {
+    "title": "Consent Request",
+    "intro": "uses the Recognify app to help remember people. They're asking your consent to save:",
+    "name_label": "Your name",
+    "embedding_text": "A face embedding (a set of numbers derived from your face, not a photo)",
+    "relationship_label": "Relationship",
+    "never_stored": "Your actual photo is never stored — only this derived data, kept only on their device.",
+    "agree_button": "I Agree",
+    "agreed_on": "You agreed on",
+    "code_label": "Your confirmation code:",
+    "show_code": "Show this code to",
+    "save_button": "Save / Print This Page"
+  },
+  "ar": {
+    "title": "طلب موافقة",
+    "intro": "يستخدم تطبيق ريكوجنيفاي لمساعدته على تذكر الأشخاص. يطلب موافقتك لحفظ:",
+    "name_label": "اسمك",
+    "embedding_text": "بصمة وجه (مجموعة أرقام مستخلصة من وجهك، وليست صورة)",
+    "relationship_label": "العلاقة",
+    "never_stored": "صورتك الفعلية لا تُحفظ أبداً — فقط هذه البيانات المستخلصة، وتبقى فقط على جهازه.",
+    "agree_button": "أوافق",
+    "agreed_on": "وافقت في",
+    "code_label": "رمز التأكيد الخاص بك:",
+    "show_code": "أظهر هذا الرمز لـ",
+    "save_button": "حفظ / طباعة هذه الصفحة"
+  }
+};
+
   const p = new URLSearchParams(window.location.search);
   const get = (key) => p.get(key) || '';
+  let agreedAt = null;
 
-  // Fill BOTH copies from the exact same values, so the confirmation
-  // section always matches what the person read.
-  const fields = {
-    title: get('title'),
-    appUserName: get('user'),
-    intro: get('intro'),
-    nameLabel: get('nameLabel'),
-    personName: get('name'),
-    embeddingText: get('embeddingText'),
-    neverStored: get('neverStored'),
-  };
-  for (const [key, value] of Object.entries(fields)) {
-    document.getElementById(key).textContent = value;
-    const repeatEl = document.getElementById(key + 'Repeat');
-    if (repeatEl) repeatEl.textContent = value;
+  // The person's details (typed in the app) are shown as they are.
+  document.querySelectorAll('.user').forEach(el => el.textContent = get('user'));
+  document.querySelectorAll('.person').forEach(el => el.textContent = get('name'));
+  const rel = get('relationship');
+  if (rel) {
+    document.querySelectorAll('.rel').forEach(el => el.textContent = rel);
+    document.querySelectorAll('.relLine').forEach(el => el.style.display = 'list-item');
   }
-
-  document.getElementById('appUserName2').textContent = get('user');
-  document.getElementById('agreeBtn').textContent = get('agreeBtn');
-  document.getElementById('agreedOn').textContent = get('agreedOn');
-  document.getElementById('codeLabel').textContent = get('codeLabel');
   document.getElementById('codeValue').textContent = get('code');
-  document.getElementById('showCode').textContent = get('showCode');
-  document.getElementById('saveBtn').textContent = get('saveBtn');
 
-  const relationship = get('relationship');
-  if (relationship) {
-    document.getElementById('relationshipLabel').textContent = get('relationshipLabel');
-    document.getElementById('relationshipValue').textContent = relationship;
-    document.getElementById('relationshipLine').style.display = 'list-item';
-    document.getElementById('relationshipLabelRepeat').textContent = get('relationshipLabel');
-    document.getElementById('relationshipValueRepeat').textContent = relationship;
-    document.getElementById('relationshipLineRepeat').style.display = 'list-item';
+  function setLang(lang) {
+    if (!TEXT[lang]) lang = 'en';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.querySelectorAll('[data-t]').forEach(el => {
+      el.textContent = TEXT[lang][el.dataset.t] || '';
+    });
+    document.getElementById('btnEn').setAttribute('aria-pressed', lang === 'en');
+    document.getElementById('btnAr').setAttribute('aria-pressed', lang === 'ar');
+    if (agreedAt) {
+      document.getElementById('dateNow').textContent =
+        agreedAt.toLocaleString(lang === 'ar' ? 'ar-AE' : 'en-GB');
+    }
   }
 
-  document.getElementById('agreeBtn').addEventListener('click', () => {
-    // The moment of agreeing, not when the page was opened.
-    document.getElementById('dateNow').textContent = new Date().toLocaleString();
-    // Swap sections: terms are shown once, never twice.
-    document.getElementById('ask').style.display = 'none';
+  document.getElementById('agreeBtn').addEventListener('click', (e) => {
+    e.target.disabled = true;
+    e.target.style.opacity = '0.5';
+    agreedAt = new Date();
     document.getElementById('done').style.display = 'block';
-    window.scrollTo(0, 0);
+    setLang(document.documentElement.lang);
   });
+
+  // Starts in the app's language; the buttons switch it any time.
+  setLang(get('lang') === 'ar' ? 'ar' : 'en');
 </script>
 
 </body>
