@@ -64,7 +64,8 @@
   }
   .checkmark { font-size: 22px; }
   hr { border: none; border-top: 1px solid #e0e0e0; margin: 24px 0; }
-  @media print { .lang, #agreeBtn, #saveBtn { display: none !important; } }
+  .version { color: #999; font-size: 11px; margin-top: 32px; text-align: center; }
+  @media print { .lang, #askActions, #saveBtn { display: none !important; } }
 </style>
 </head>
 <body>
@@ -77,10 +78,9 @@
   other person can switch language with the buttons at the top.
   If you change the wording in strings.dart, change it here too.
 
-  Deliberately ONE block for the confirmation: the terms are repeated
-  inside it, so saving / printing always captures everything,
-  whatever the scroll position (some mobile browsers only printed the
-  part on screen).
+  The terms appear ONCE; after "I Agree" the confirmation is added
+  under them, so saving / printing captures everything a single time.
+  The small "v3" line at the bottom shows the live page is up to date.
 -->
 
 <div class="lang" role="group" aria-label="Language / اللغة">
@@ -88,7 +88,12 @@
   <button id="btnAr" type="button" onclick="setLang('ar')">العربية</button>
 </div>
 
-<div id="ask">
+<!--
+  ONE block only: the request text appears once. "I Agree" is replaced
+  by the confirmation underneath it, so the page and a saved / printed
+  copy never show the request twice.
+-->
+<div id="consent">
   <h2 data-t="title"></h2>
   <p><b class="user"></b> <span data-t="intro"></span></p>
   <ul>
@@ -97,25 +102,22 @@
     <li class="relLine" style="display:none"><span data-t="relationship_label"></span>: <span class="rel"></span></li>
   </ul>
   <div class="never-stored"><span data-t="never_stored"></span></div>
-  <button id="agreeBtn" type="button" data-t="agree_button"></button>
+
+  <div id="askActions">
+    <button id="agreeBtn" type="button" data-t="agree_button"></button>
+  </div>
+
+  <div id="done">
+    <hr>
+    <p class="checkmark">&#10003; <span data-t="agreed_on"></span> <span id="dateNow"></span></p>
+    <p data-t="code_label"></p>
+    <div class="code" id="codeValue"></div>
+    <p><span data-t="show_code"></span> <b class="user"></b></p>
+    <button id="saveBtn" type="button" onclick="window.print()" data-t="save_button"></button>
+  </div>
 </div>
 
-<div id="done">
-  <h2 data-t="title"></h2>
-  <p><b class="user"></b> <span data-t="intro"></span></p>
-  <ul>
-    <li><span data-t="name_label"></span>: <b class="person"></b></li>
-    <li data-t="embedding_text"></li>
-    <li class="relLine" style="display:none"><span data-t="relationship_label"></span>: <span class="rel"></span></li>
-  </ul>
-  <div class="never-stored"><span data-t="never_stored"></span></div>
-  <hr>
-  <p class="checkmark">&#10003; <span data-t="agreed_on"></span> <span id="dateNow"></span></p>
-  <p data-t="code_label"></p>
-  <div class="code" id="codeValue"></div>
-  <p><span data-t="show_code"></span> <b class="user"></b></p>
-  <button id="saveBtn" type="button" onclick="window.print()" data-t="save_button"></button>
-</div>
+<p class="version">Recognify consent page v3</p>
 
 <script>
   const TEXT = {
@@ -123,7 +125,7 @@
     "title": "Consent Request",
     "intro": "uses the Recognify app to help remember people. They're asking your consent to save:",
     "name_label": "Your name",
-    "embedding_text": "A face embedding (a set of numbers derived from your face, not a photo)",
+    "embedding_text": "Face embeddings (sets of numbers derived from a short scan of your face from a few angles, not photos). The app may add more only when its user confirms it recognised you correctly.",
     "relationship_label": "Relationship",
     "never_stored": "Your actual photo is never stored — only this derived data, kept only on their device.",
     "agree_button": "I Agree",
@@ -136,7 +138,7 @@
     "title": "طلب موافقة",
     "intro": "يستخدم تطبيق ريكوجنيفاي لمساعدته على تذكر الأشخاص. يطلب موافقتك لحفظ:",
     "name_label": "اسمك",
-    "embedding_text": "بصمة وجه (مجموعة أرقام مستخلصة من وجهك، وليست صورة)",
+    "embedding_text": "بصمات وجه (مجموعات أرقام مستخلصة من مسح قصير لوجهك من عدة زوايا، وليست صوراً). قد يضيف التطبيق المزيد فقط عندما يؤكد مستخدمه أنه تعرّف عليك بشكل صحيح.",
     "relationship_label": "العلاقة",
     "never_stored": "صورتك الفعلية لا تُحفظ أبداً — فقط هذه البيانات المستخلصة، وتبقى فقط على جهازه.",
     "agree_button": "أوافق",
@@ -176,10 +178,9 @@
     }
   }
 
-  document.getElementById('agreeBtn').addEventListener('click', (e) => {
-    e.target.disabled = true;
-    e.target.style.opacity = '0.5';
+  document.getElementById('agreeBtn').addEventListener('click', () => {
     agreedAt = new Date();
+    document.getElementById('askActions').style.display = 'none';
     document.getElementById('done').style.display = 'block';
     setLang(document.documentElement.lang);
   });
